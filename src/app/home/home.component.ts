@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {Course, sortCoursesBySeqNo} from '../model/course';
 import {Observable} from 'rxjs';
-import {finalize, map} from 'rxjs/operators';
+import {map} from 'rxjs/operators';
 import {CoursesService} from "../services/courses.service";
 import {LoadingService} from "../loading/loading.service";
 
@@ -27,17 +27,16 @@ export class HomeComponent implements OnInit {
   }
 
   reloadCourses() {
-    this.loadingService.loadingOn();
     const courses$ = this.coursesService.loadAllCourses()
       .pipe(
-        map(courses => courses.sort(sortCoursesBySeqNo)),
-        finalize(() => this.loadingService.loadingOff())
+        map(courses => courses.sort(sortCoursesBySeqNo))
       );
-    this.beginnerCourses$ = courses$
+    const loadCourses$ = this.loadingService.showLoaderUntilCompleted(courses$);
+    this.beginnerCourses$ = loadCourses$
       .pipe(
         map(courses => courses.filter(courses => courses.category == "BEGINNER"))
       );
-    this.advancedCourses$ = courses$
+    this.advancedCourses$ = loadCourses$
       .pipe(
         map(courses => courses.filter(courses => courses.category == "ADVANCED"))
       );
